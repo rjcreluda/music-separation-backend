@@ -40,8 +40,7 @@ def separate_audio():
     output_directory = app.config['OUTPUT_FOLDER']
 
     try:
-        # Separate vocals and accompaniment using Demucs
-        #separate_file(temp_path, model='2stems', out_dir=output_directory)
+        # Separate vocals and accompaniment
         demucs.separate.main(["--mp3", "--segment", '8', "--two-stems", "vocals", "-n", "mdx_extra", temp_path])
         return jsonify({'success': 'Audio separation completed', 'output_directory': output_directory})
     except Exception as e:
