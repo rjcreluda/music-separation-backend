@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demucs Audio Separation</title>
+</head>
+<body>
+    <h1>Demucs Audio Separation</h1>
+    <form action="/separate_audio" method="post" enctype="multipart/form-data">
+        <label for="audio_file">Choose an audio file (MP3 only):</label>
+        <input type="file" name="audio_file" accept=".mp3" required>
+        <button type="submit">Separate Audio</button>
+    </form>
+</body>
+</html>
