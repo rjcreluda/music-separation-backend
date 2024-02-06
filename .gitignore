@@ -8,3 +8,7 @@ env.bak/
 .htaccess
 passenger_wsgi.py
 tmp/
+
+# Other site data
+separated/
+uploads/

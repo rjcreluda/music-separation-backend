@@ -1,7 +1,25 @@
 import os
+import sys
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 import demucs.separate
+import subprocess
+
+sys.path.insert(0, os.path.dirname(__file__))
+
+def add_ffmpeg_to_path():
+    # Add the directory containing ffmpeg to the PATH environment variable
+    ffmpeg_path = "/home/ixra1300/software/ffmpeg"  # Update this with the actual path to ffmpeg
+    
+    if ffmpeg_path not in os.environ["PATH"]:
+        os.environ["PATH"] += os.pathsep + ffmpeg_path
+        print('FFMPEG added to path')
+    
+    os.environ['FFMPEG_PATH'] = ffmpeg_path
+    os.environ['FFPROBE_PATH'] = ffmpeg_path
+
+
+add_ffmpeg_to_path()
 
 app = Flask(__name__)
 
@@ -15,6 +33,20 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     return render_template('index.html')
+    
+
+@app.route('/test')
+def test():
+    output_directory = app.config['OUTPUT_FOLDER']
+    try:
+        # Separate vocals and accompaniment
+        run_demucs_command( 'uploads/demo.mp3' )
+        #demucs.separate.main(["--mp3", "--two-stems", "vocals", "-n", "mdx_extra", "uploads/demo.mp3"])
+        return jsonify({'success': 'Audio separation completed', 'output_directory': output_directory})
+    except Exception as e:
+        print(f'RJ Error during audio separation: {e}')
+        return jsonify({'error': f'Error during audio separation: {str(e)}'})
+
 
 @app.route('/separate_audio', methods=['POST'])
 def separate_audio():
@@ -41,13 +73,35 @@ def separate_audio():
 
     try:
         # Separate vocals and accompaniment
-        demucs.separate.main(["--mp3", "--segment", '8', "--two-stems", "vocals", "-n", "mdx_extra", temp_path])
+        run_demucs_command( temp_path )
         return jsonify({'success': 'Audio separation completed', 'output_directory': output_directory})
     except Exception as e:
+        print(f'RJ Error during audio separation: {e}')
         return jsonify({'error': f'Error during audio separation: {str(e)}'})
     finally:
         # Clean up: remove the uploaded audio file
         os.remove(temp_path)
+        
+        
+def run_demucs_command(path_to_audio_file):
+    print('[Dev Guy] Starting track separation ...')
+    command = [
+        'python',
+        '-m',
+        'demucs.separate',
+        '-d',
+        'cpu',
+        '--mp3',
+        #f'--mp3-bitrate {bitrate}',
+        path_to_audio_file
+    ]
+
+    try:
+        subprocess.run(command, check=True)
+        print('[Dev Guy] Track Separation success! :)')
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing demucs command: {e}")
+        
 
 # Executed on prod
 application = app
